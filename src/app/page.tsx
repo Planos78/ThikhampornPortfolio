@@ -1,6 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  useSpring,
+  useMotionValue,
+  AnimatePresence,
+} from "framer-motion";
 
 /* ───────────────────────── DATA ───────────────────────── */
 
@@ -13,9 +22,10 @@ const NAV_LINKS = [
   { label: "Contact", href: "#contact" },
 ];
 
-const SKILLS: { category: string; items: string[] }[] = [
+const SKILLS: { category: string; icon: string; items: string[] }[] = [
   {
     category: "Frontend",
+    icon: "01",
     items: [
       "React",
       "Redux",
@@ -27,9 +37,14 @@ const SKILLS: { category: string; items: string[] }[] = [
       "TailwindCSS",
     ],
   },
-  { category: "UI Libraries", items: ["MUI (Material UI)", "Ant Design"] },
+  {
+    category: "UI Libraries",
+    icon: "02",
+    items: ["MUI (Material UI)", "Ant Design"],
+  },
   {
     category: "Maps & Real-time",
+    icon: "03",
     items: [
       "Google Maps API",
       "Longdo Map",
@@ -38,10 +53,15 @@ const SKILLS: { category: string; items: string[] }[] = [
       "Vehicle Tracking & Replay",
     ],
   },
-  { category: "Backend", items: ["Go", "PHP", "REST API Development"] },
-  { category: "Database", items: ["MySQL", "MongoDB"] },
+  {
+    category: "Backend",
+    icon: "04",
+    items: ["Go", "PHP", "REST API Development"],
+  },
+  { category: "Database", icon: "05", items: ["MySQL", "MongoDB"] },
   {
     category: "DevOps / Tools",
+    icon: "06",
     items: [
       "Docker",
       "Firebase",
@@ -53,8 +73,16 @@ const SKILLS: { category: string; items: string[] }[] = [
   },
   {
     category: "AI Tools",
+    icon: "07",
     items: ["Cursor", "Claude Code", "ChatGPT", "Google Antigravity"],
   },
+];
+
+const STATS = [
+  { value: 4, suffix: "+", label: "Years Experience" },
+  { value: 50000, suffix: "+", label: "Vehicles Tracked" },
+  { value: 70, suffix: "+", label: "Reports Built" },
+  { value: 5, suffix: "+", label: "Major Projects" },
 ];
 
 const EXPERIENCE_ITEMS = [
@@ -73,74 +101,83 @@ const PROJECTS: {
   title: string;
   tech: string;
   desc: string;
-  color: string;
+  gradient: string;
+  accent: string;
 }[] = [
   {
     title: "CPAC GPS Center & Terminus",
     tech: "React · Go · PHP · MySQL · MongoDB · MQTT · Google Maps · Longdo Map",
     desc: "Fleet platform supporting 50,000+ vehicles — real-time GPS, ADAS/DMS driver monitoring, MDVR streaming, geofencing, 77+ reports.",
-    color: "from-blue-500 to-cyan-500",
+    gradient: "from-blue-600 via-blue-500 to-cyan-400",
+    accent: "blue",
   },
   {
     title: "SCG CPAC ToGo – Back Office",
     tech: "React · Redux-Saga · Ant Design · Firebase · Docker",
     desc: "Admin platform for SCG managing concrete orders — product config (Strength, Slump, Structure), plant & logistics management.",
-    color: "from-violet-500 to-purple-500",
+    gradient: "from-violet-600 via-purple-500 to-fuchsia-400",
+    accent: "violet",
   },
   {
     title: "SCG CPAC ToGo – LINE LIFF App",
     tech: "PHP · LINE LIFF · 2C2P Payment · Google Maps · Longdo Map",
     desc: "Mobile web app on LINE for ordering concrete — map pinning, product selection, payment, and delivery tracking.",
-    color: "from-green-500 to-emerald-500",
+    gradient: "from-emerald-600 via-green-500 to-teal-400",
+    accent: "emerald",
   },
   {
     title: "SCB LCMS – Banking Back Office",
     tech: "React · MUI",
     desc: "Internal banking management system for SCB with dashboard and management UI, focused on performance and maintainability.",
-    color: "from-amber-500 to-orange-500",
+    gradient: "from-amber-500 via-orange-500 to-red-400",
+    accent: "amber",
   },
   {
     title: "ANP Merchant Platform",
     tech: "React · TailwindCSS",
     desc: "Ticket management platform for merchants with improved UX and reusable component architecture.",
-    color: "from-rose-500 to-pink-500",
+    gradient: "from-rose-600 via-pink-500 to-fuchsia-400",
+    accent: "rose",
   },
 ];
 
-/* ───────────────────────── ICONS (inline SVG) ───────────────────────── */
+/* ───────────────────────── HOOKS ───────────────────────── */
+
+function useCountUp(target: number, inView: boolean) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let start = 0;
+    const duration = 2000;
+    const increment = target / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, inView]);
+  return count;
+}
+
+/* ───────────────────────── ICONS ───────────────────────── */
 
 function PhoneIcon() {
   return (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-      />
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
     </svg>
   );
 }
 
 function MailIcon() {
   return (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-      />
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
   );
 }
@@ -163,91 +200,221 @@ function LinkedInIcon() {
 
 function LocationIcon() {
   return (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-      />
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   );
 }
 
 function MenuIcon() {
   return (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4 6h16M4 12h16M4 18h16"
-      />
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   );
 }
 
 function CloseIcon() {
   return (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6 18L18 6M6 6l12 12"
-      />
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
 }
 
-/* ───────────────────────── COMPONENTS ───────────────────────── */
+/* ───────────────────────── MAGNETIC BUTTON ───────────────────────── */
+
+function MagneticButton({
+  children,
+  className,
+  href,
+  target,
+  rel,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  href?: string;
+  target?: string;
+  rel?: string;
+}) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 300, damping: 20 });
+  const springY = useSpring(y, { stiffness: 300, damping: 20 });
+
+  const handleMouse = (e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    x.set((e.clientX - rect.left - rect.width / 2) * 0.3);
+    y.set((e.clientY - rect.top - rect.height / 2) * 0.3);
+  };
+
+  const reset = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.a
+      ref={ref}
+      href={href}
+      target={target}
+      rel={rel}
+      style={{ x: springX, y: springY }}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      whileTap={{ scale: 0.95 }}
+      className={className}
+    >
+      {children}
+    </motion.a>
+  );
+}
+
+/* ───────────────────────── FLOATING PARTICLES ───────────────────────── */
+
+function FloatingParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {Array.from({ length: 30 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 rounded-full bg-blue-400/20"
+          initial={{
+            x: `${Math.random() * 100}%`,
+            y: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [
+              `${Math.random() * 100}%`,
+              `${Math.random() * 100}%`,
+              `${Math.random() * 100}%`,
+            ],
+            x: [
+              `${Math.random() * 100}%`,
+              `${Math.random() * 100}%`,
+              `${Math.random() * 100}%`,
+            ],
+            scale: [1, 1.5, 1],
+            opacity: [0.2, 0.5, 0.2],
+          }}
+          transition={{
+            duration: 10 + Math.random() * 20,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+          style={{
+            width: `${2 + Math.random() * 4}px`,
+            height: `${2 + Math.random() * 4}px`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ───────────────────────── TEXT REVEAL ───────────────────────── */
+
+/* ───────────────────────── SCROLL REVEAL ───────────────────────── */
+
+function ScrollReveal({
+  children,
+  className,
+  delay = 0,
+  direction = "up",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  direction?: "up" | "left" | "right" | "scale";
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+
+  const variants = {
+    up: { hidden: { y: 80, opacity: 0 }, visible: { y: 0, opacity: 1 } },
+    left: { hidden: { x: -80, opacity: 0 }, visible: { x: 0, opacity: 1 } },
+    right: { hidden: { x: 80, opacity: 0 }, visible: { x: 0, opacity: 1 } },
+    scale: {
+      hidden: { scale: 0.8, opacity: 0 },
+      visible: { scale: 1, opacity: 1 },
+    },
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      variants={variants[direction]}
+      transition={{
+        duration: 0.8,
+        delay,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ───────────────────────── NAVBAR ───────────────────────── */
 
 function Navbar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? "bg-white/70 backdrop-blur-xl shadow-lg shadow-black/5 border-b border-white/20"
+          : "bg-transparent"
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <a href="#" className="text-xl font-bold text-primary">
-          Thikhamporn<span className="text-dark">.Dev</span>
-        </a>
+        <motion.a
+          href="#"
+          className="text-xl font-bold"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            Thikhamporn
+          </span>
+          <span className="text-slate-800">.Dev</span>
+        </motion.a>
 
-        {/* Desktop */}
-        <div className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((l) => (
-            <a
+        <div className="hidden md:flex items-center gap-1">
+          {NAV_LINKS.map((l, i) => (
+            <motion.a
               key={l.href}
               href={l.href}
-              className="text-sm text-gray-text hover:text-primary transition-colors font-medium"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * i + 0.3 }}
+              className="relative px-4 py-2 text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium group"
             >
               {l.label}
-            </a>
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 group-hover:w-full transition-all duration-300 rounded-full" />
+            </motion.a>
           ))}
         </div>
 
-        {/* Mobile toggle */}
         <button
-          className="md:hidden text-dark"
+          className="md:hidden text-slate-800"
           onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
         >
@@ -255,155 +422,385 @@ function Navbar() {
         </button>
       </div>
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden bg-white border-t border-gray-100 px-6 pb-4">
-          {NAV_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="block py-3 text-sm text-gray-text hover:text-primary transition-colors font-medium"
-            >
-              {l.label}
-            </a>
-          ))}
-        </div>
-      )}
-    </nav>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white/90 backdrop-blur-xl border-t border-gray-100 px-6 overflow-hidden"
+          >
+            {NAV_LINKS.map((l, i) => (
+              <motion.a
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="block py-3 text-sm text-slate-600 hover:text-blue-600 transition-colors font-medium"
+              >
+                {l.label}
+              </motion.a>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   );
 }
 
+/* ───────────────────────── HERO ───────────────────────── */
+
 function Hero() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
+
   return (
-    <section className="min-h-screen flex items-center justify-center pt-16 px-6">
-      <div className="max-w-3xl text-center">
-        {/* Avatar placeholder */}
-        <div className="w-28 h-28 mx-auto mb-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-blue-200">
-          T
+    <section
+      ref={ref}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+    >
+      {/* Animated background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 via-white to-white" />
+        <FloatingParticles />
+        {/* Glowing orbs */}
+        <motion.div
+          className="absolute top-20 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl"
+          animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-400/5 rounded-full blur-3xl"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+
+      <motion.div style={{ y, opacity, scale }} className="relative z-10 max-w-4xl text-center px-6">
+        {/* Animated avatar */}
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 1, delay: 0.2, type: "spring", stiffness: 100 }}
+          className="relative w-32 h-32 mx-auto mb-10"
+        >
+          <motion.div
+            className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 via-cyan-400 to-violet-500"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          />
+          <div className="absolute inset-1 rounded-full bg-white flex items-center justify-center">
+            <span className="text-4xl font-bold bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              T
+            </span>
+          </div>
+          {/* Orbiting dot */}
+          <motion.div
+            className="absolute w-3 h-3 bg-blue-500 rounded-full shadow-lg shadow-blue-500/50"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            style={{ top: 0, left: "50%", transformOrigin: "0 64px" }}
+          />
+        </motion.div>
+
+        {/* Title with stagger reveal */}
+        <div className="overflow-hidden">
+          <motion.h1
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-5xl sm:text-6xl lg:text-8xl font-bold text-slate-900 leading-[1.1] tracking-tight"
+          >
+            Thikhamporn
+          </motion.h1>
+        </div>
+        <div className="overflow-hidden">
+          <motion.h1
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.65, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-5xl sm:text-6xl lg:text-8xl font-bold leading-[1.1] tracking-tight bg-gradient-to-r from-blue-600 via-cyan-500 to-violet-500 bg-clip-text text-transparent"
+          >
+            O-Siri
+          </motion.h1>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-dark leading-tight">
-          Thikhamporn{" "}
-          <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-            O-Siri
-          </span>
-        </h1>
-
-        <p className="mt-4 text-lg sm:text-xl text-gray-text font-medium">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="mt-6 text-lg sm:text-xl text-slate-500 font-medium"
+        >
           Frontend / Fullstack Developer &middot; 4+ Years Experience
-        </p>
+        </motion.p>
 
-        <p className="mt-6 text-gray-text leading-relaxed max-w-2xl mx-auto">
-          Frontend-focused Fullstack Developer building large-scale enterprise
-          platforms in{" "}
-          <span className="text-dark font-medium">
-            Fleet Management, Logistics, Fintech, and E-Commerce
-          </span>
-          . Strong expertise in the React ecosystem, real-time data systems, and
-          map-based applications.
-        </p>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.05 }}
+          className="mt-4 text-slate-400 leading-relaxed max-w-2xl mx-auto"
+        >
+          Building large-scale enterprise platforms in Fleet Management,
+          Logistics, Fintech, and E-Commerce with cutting-edge technologies.
+        </motion.p>
 
         {/* Contact pills */}
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a
-            href="tel:0830085804"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full text-sm text-gray-text hover:bg-primary hover:text-white transition-all"
-          >
-            <PhoneIcon /> 083-008-5804
-          </a>
-          <a
-            href="mailto:planpopx78@gmail.com"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full text-sm text-gray-text hover:bg-primary hover:text-white transition-all"
-          >
-            <MailIcon /> planpopx78@gmail.com
-          </a>
-          <a
-            href="https://github.com/Planos78"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full text-sm text-gray-text hover:bg-primary hover:text-white transition-all"
-          >
-            <GitHubIcon /> Planos78
-          </a>
-          <a
-            href="https://linkedin.com/in/thikhamporn-o-siri-375b47198"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full text-sm text-gray-text hover:bg-primary hover:text-white transition-all"
-          >
-            <LinkedInIcon /> LinkedIn
-          </a>
-          <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full text-sm text-gray-text">
-            <LocationIcon /> Bangkok, Thailand
-          </span>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+          className="mt-8 flex flex-wrap justify-center gap-3"
+        >
+          {[
+            { icon: <PhoneIcon />, text: "083-008-5804", href: "tel:0830085804" },
+            { icon: <MailIcon />, text: "planpopx78@gmail.com", href: "mailto:planpopx78@gmail.com" },
+            { icon: <GitHubIcon />, text: "Planos78", href: "https://github.com/Planos78" },
+            { icon: <LinkedInIcon />, text: "LinkedIn", href: "https://linkedin.com/in/thikhamporn-o-siri-375b47198" },
+            { icon: <LocationIcon />, text: "Bangkok, Thailand" },
+          ].map((item, i) => (
+            <motion.span
+              key={i}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {item.href ? (
+                <a
+                  href={item.href}
+                  target={item.href.startsWith("http") ? "_blank" : undefined}
+                  rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:shadow-lg hover:shadow-blue-100/50 transition-all border border-slate-200/50"
+                >
+                  {item.icon} {item.text}
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm text-slate-500 border border-slate-200/50">
+                  {item.icon} {item.text}
+                </span>
+              )}
+            </motion.span>
+          ))}
+        </motion.div>
 
         {/* CTA */}
-        <div className="mt-10 flex justify-center gap-4">
-          <a
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.4 }}
+          className="mt-10 flex justify-center gap-4"
+        >
+          <MagneticButton
             href="#projects"
-            className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors shadow-lg shadow-blue-200"
+            className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-semibold overflow-hidden shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-shadow"
           >
-            View Projects
-          </a>
-          <a
+            <span className="relative z-10">View Projects</span>
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600"
+              initial={{ x: "100%" }}
+              whileHover={{ x: 0 }}
+              transition={{ duration: 0.3 }}
+            />
+          </MagneticButton>
+          <MagneticButton
             href="#contact"
-            className="px-6 py-3 border border-border rounded-lg font-medium text-dark hover:border-primary hover:text-primary transition-colors"
+            className="px-8 py-4 border-2 border-slate-200 rounded-2xl font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-600 transition-all hover:shadow-lg"
           >
             Contact Me
-          </a>
-        </div>
-      </div>
+          </MagneticButton>
+        </motion.div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="mt-16"
+        >
+          <motion.div
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-6 h-10 mx-auto border-2 border-slate-300 rounded-full flex justify-center pt-2"
+          >
+            <motion.div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
 
-function SectionTitle({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle?: string;
-}) {
+/* ───────────────────────── STATS ───────────────────────── */
+
+function StatCounter({ stat, inView }: { stat: (typeof STATS)[0]; inView: boolean }) {
+  const count = useCountUp(stat.value, inView);
+  const formatted = stat.value >= 1000 ? count.toLocaleString() : count;
   return (
-    <div className="text-center mb-12">
-      <h2 className="text-3xl font-bold text-dark">{title}</h2>
-      {subtitle && <p className="mt-2 text-gray-text">{subtitle}</p>}
-      <div className="mt-4 w-16 h-1 bg-primary mx-auto rounded-full" />
+    <div className="text-center">
+      <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+        {formatted}
+        {stat.suffix}
+      </div>
+      <div className="mt-2 text-slate-500 text-sm font-medium">{stat.label}</div>
     </div>
   );
 }
 
+function StatsSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+
+  return (
+    <section ref={ref} className="py-20 px-6">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-8 p-8 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/50 shadow-xl shadow-slate-100"
+        >
+          {STATS.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={inView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: i * 0.1 + 0.3, type: "spring" }}
+            >
+              <StatCounter stat={stat} inView={inView} />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────── ABOUT (TEXT REVEAL) ───────────────────────── */
+
+function About() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.8", "end 0.4"],
+  });
+
+  const words =
+    "Frontend-focused Fullstack Developer with 4+ years of experience building large-scale enterprise platforms. I specialize in the React ecosystem, real-time data systems (MQTT/WebSocket), and map-based applications (Google Maps, Longdo Map). Proven ability to handle complex production systems at scale (50,000+ vehicles), debug critical issues, and deliver clean, high-performance interfaces.".split(
+      " "
+    );
+
+  return (
+    <section id="about" ref={ref} className="py-32 px-6">
+      <div className="max-w-5xl mx-auto">
+        <ScrollReveal>
+          <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-6">
+            About Me
+          </p>
+        </ScrollReveal>
+        <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-snug">
+          {words.map((word, i) => {
+            const start = i / words.length;
+            const end = start + 1 / words.length;
+            return <Word key={i} progress={scrollYProgress} range={[start, end]}>{word}</Word>;
+          })}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function Word({
+  children,
+  progress,
+  range,
+}: {
+  children: string;
+  progress: ReturnType<typeof useScroll>["scrollYProgress"];
+  range: [number, number];
+}) {
+  const opacity = useTransform(progress, range, [0.15, 1]);
+  return (
+    <motion.span style={{ opacity }} className="inline-block mr-[0.3em] transition-opacity duration-100">
+      {children}
+    </motion.span>
+  );
+}
+
+/* ───────────────────────── SKILLS ───────────────────────── */
+
 function Skills() {
   return (
-    <section id="skills" className="py-20 px-6 bg-section-alt">
+    <section id="skills" className="py-32 px-6 bg-gradient-to-b from-slate-50 to-white overflow-hidden">
       <div className="max-w-6xl mx-auto">
-        <SectionTitle
-          title="Technical Skills"
-          subtitle="Technologies I work with daily"
-        />
+        <ScrollReveal>
+          <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-4 text-center">
+            Technical Skills
+          </p>
+        </ScrollReveal>
+        <ScrollReveal delay={0.1}>
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 text-center mb-4">
+            Tools I Use
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal delay={0.2}>
+          <p className="text-slate-500 text-center mb-16 max-w-lg mx-auto">
+            Technologies I work with daily to build high-performance applications
+          </p>
+        </ScrollReveal>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {SKILLS.map((group) => (
-            <div
+          {SKILLS.map((group, i) => (
+            <ScrollReveal
               key={group.category}
-              className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+              delay={i * 0.08}
+              direction={i % 2 === 0 ? "left" : "right"}
             >
-              <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
-                {group.category}
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {group.items.map((item) => (
-                  <span
-                    key={item}
-                    className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full font-medium"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
+              <motion.div
+                whileHover={{ y: -8, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-2xl hover:shadow-blue-100/50 transition-all border border-slate-100 overflow-hidden"
+              >
+                {/* Background number */}
+                <span className="absolute -top-4 -right-2 text-8xl font-black text-slate-50 group-hover:text-blue-50 transition-colors select-none">
+                  {group.icon}
+                </span>
+                <div className="relative">
+                  <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-4">
+                    {group.category}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map((item, j) => (
+                      <motion.span
+                        key={item}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: j * 0.05 + i * 0.05 }}
+                        whileHover={{
+                          scale: 1.1,
+                          backgroundColor: "rgb(59 130 246)",
+                          color: "white",
+                        }}
+                        className="px-3 py-1.5 bg-slate-50 text-slate-700 text-sm rounded-xl font-medium cursor-default transition-colors"
+                      >
+                        {item}
+                      </motion.span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -411,54 +808,91 @@ function Skills() {
   );
 }
 
+/* ───────────────────────── EXPERIENCE ───────────────────────── */
+
 function Experience() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.7", "end 0.9"],
+  });
+  const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
   return (
-    <section id="experience" className="py-20 px-6">
+    <section id="experience" ref={ref} className="py-32 px-6">
       <div className="max-w-4xl mx-auto">
-        <SectionTitle
-          title="Experience"
-          subtitle="Where I've made an impact"
-        />
+        <ScrollReveal>
+          <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-4">
+            Experience
+          </p>
+        </ScrollReveal>
+        <ScrollReveal delay={0.1}>
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-16">
+            Where I&apos;ve Made
+            <br />
+            <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              an Impact
+            </span>
+          </h2>
+        </ScrollReveal>
 
         <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-100 hidden sm:block" />
+          {/* Animated timeline line */}
+          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-100 hidden sm:block">
+            <motion.div
+              className="w-full bg-gradient-to-b from-blue-500 to-cyan-400 rounded-full"
+              style={{ height: lineHeight }}
+            />
+          </div>
 
-          <div className="sm:pl-10">
+          <div className="sm:pl-16">
             {/* Company header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-              <div>
-                <h3 className="text-2xl font-bold text-dark">Freewill FX</h3>
-                <p className="text-primary font-medium">
-                  Frontend / Fullstack Developer
+            <ScrollReveal>
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-2">
+                <div>
+                  <h3 className="text-3xl font-bold text-slate-900">
+                    Freewill FX
+                  </h3>
+                  <p className="text-blue-600 font-semibold mt-1">
+                    Frontend / Fullstack Developer
+                  </p>
+                </div>
+                <p className="text-slate-400 text-sm mt-1 sm:mt-0 font-mono">
+                  Jul 2021 – Present
                 </p>
               </div>
-              <p className="text-gray-text text-sm mt-1 sm:mt-0">
-                Jul 2021 – Present &middot; Bangkok, Thailand
-              </p>
-            </div>
+            </ScrollReveal>
 
-            {/* Key projects badge */}
-            <div className="mb-6 flex flex-wrap gap-2">
-              {["Fleetlink", "CPAC GPS Center", "Terminus Fleet Platform"].map(
-                (p) => (
-                  <span
-                    key={p}
-                    className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full font-semibold"
-                  >
-                    {p}
-                  </span>
-                )
-              )}
-            </div>
+            <ScrollReveal delay={0.15}>
+              <div className="mb-8 mt-4 flex flex-wrap gap-2">
+                {["Fleetlink", "CPAC GPS Center", "Terminus Fleet Platform"].map(
+                  (p) => (
+                    <motion.span
+                      key={p}
+                      whileHover={{ scale: 1.05 }}
+                      className="px-4 py-1.5 bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 text-xs rounded-full font-bold border border-blue-100"
+                    >
+                      {p}
+                    </motion.span>
+                  )
+                )}
+              </div>
+            </ScrollReveal>
 
-            {/* Items */}
             <ul className="space-y-4">
               {EXPERIENCE_ITEMS.map((item, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="mt-1.5 flex-shrink-0 w-2 h-2 rounded-full bg-primary" />
-                  <span className="text-gray-600 leading-relaxed">{item}</span>
-                </li>
+                <ScrollReveal key={i} delay={i * 0.06}>
+                  <motion.li
+                    className="flex gap-4 group"
+                    whileHover={{ x: 8 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <span className="mt-2 flex-shrink-0 w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 shadow-sm shadow-blue-500/50 group-hover:scale-150 transition-transform" />
+                    <span className="text-slate-600 leading-relaxed group-hover:text-slate-900 transition-colors">
+                      {item}
+                    </span>
+                  </motion.li>
+                </ScrollReveal>
               ))}
             </ul>
           </div>
@@ -468,35 +902,73 @@ function Experience() {
   );
 }
 
+/* ───────────────────────── PROJECTS ───────────────────────── */
+
 function Projects() {
   return (
-    <section id="projects" className="py-20 px-6 bg-section-alt">
+    <section
+      id="projects"
+      className="py-32 px-6 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 text-white overflow-hidden"
+    >
       <div className="max-w-6xl mx-auto">
-        <SectionTitle
-          title="Notable Projects"
-          subtitle="Real-world production systems I've built"
-        />
+        <ScrollReveal>
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-4 text-center">
+            Notable Projects
+          </p>
+        </ScrollReveal>
+        <ScrollReveal delay={0.1}>
+          <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
+            Production Systems
+            <br />
+            <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+              I&apos;ve Built
+            </span>
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal delay={0.2}>
+          <p className="text-slate-400 text-center mb-16 max-w-lg mx-auto">
+            Real-world enterprise applications serving thousands of users daily
+          </p>
+        </ScrollReveal>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PROJECTS.map((p) => (
-            <div
-              key={p.title}
-              className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 hover:-translate-y-1"
-            >
-              {/* Gradient header */}
-              <div
-                className={`h-2 bg-gradient-to-r ${p.color}`}
-              />
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-dark mb-2">{p.title}</h3>
-                <p className="text-xs text-gray-text font-mono mb-3">
-                  {p.tech}
-                </p>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {p.desc}
-                </p>
-              </div>
-            </div>
+          {PROJECTS.map((p, i) => (
+            <ScrollReveal key={p.title} delay={i * 0.1} direction="scale">
+              <motion.div
+                whileHover={{ y: -12, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-700/50 hover:border-slate-600 transition-all"
+              >
+                {/* Animated gradient header */}
+                <div className={`h-32 bg-gradient-to-br ${p.gradient} relative overflow-hidden`}>
+                  <motion.div
+                    className="absolute inset-0 bg-white/10"
+                    initial={{ x: "-100%", rotate: 12 }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 0.8 }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.span
+                      className="text-6xl font-black text-white/20"
+                      whileHover={{ scale: 1.2, rotate: -5 }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </motion.span>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+                    {p.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-mono mb-4 leading-relaxed">
+                    {p.tech}
+                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    {p.desc}
+                  </p>
+                </div>
+              </motion.div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -504,75 +976,132 @@ function Projects() {
   );
 }
 
+/* ───────────────────────── EDUCATION ───────────────────────── */
+
 function Education() {
   return (
-    <section id="education" className="py-20 px-6">
+    <section id="education" className="py-32 px-6">
       <div className="max-w-4xl mx-auto">
-        <SectionTitle title="Education & Awards" />
+        <ScrollReveal>
+          <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-4 text-center">
+            Education & Awards
+          </p>
+        </ScrollReveal>
+        <ScrollReveal delay={0.1}>
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 text-center mb-16">
+            Background
+          </h2>
+        </ScrollReveal>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Education */}
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
+          <ScrollReveal direction="left">
+            <motion.div
+              whileHover={{ y: -4 }}
+              className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <motion.div
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                  className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/25"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 14l9-5-9-5-9 5 9 5zM12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zM12 14v7"
-                  />
-                </svg>
+                  <svg
+                    className="w-7 h-7 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 14l9-5-9-5-9 5 9 5zM12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zM12 14v7"
+                    />
+                  </svg>
+                </motion.div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">KMITL</h3>
+                  <p className="text-sm text-slate-400 font-mono">2017 – 2021</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-dark">KMITL</h3>
-                <p className="text-sm text-gray-text">2017 – 2021</p>
-              </div>
-            </div>
-            <p className="text-dark font-medium">
-              King Mongkut&apos;s Institute of Technology Ladkrabang
-            </p>
-            <p className="text-gray-text text-sm mt-1">
-              Bachelor of Engineering – Computer Engineering
-            </p>
-          </div>
+              <p className="text-slate-800 font-semibold">
+                King Mongkut&apos;s Institute of Technology Ladkrabang
+              </p>
+              <p className="text-slate-500 text-sm mt-2">
+                Bachelor of Engineering – Computer Engineering
+              </p>
+            </motion.div>
+          </ScrollReveal>
 
-          {/* Awards & Languages */}
           <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-              <h3 className="font-bold text-dark mb-3">Awards</h3>
-              <ul className="space-y-2">
-                <li className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-amber-500">&#9733;</span> Mobile
-                  Application D-Industry – 2nd Runner Up
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-amber-500">&#9733;</span> Robot Contest
-                  KMITL 2017 – Top 10
-                </li>
-              </ul>
-            </div>
+            <ScrollReveal direction="right">
+              <motion.div
+                whileHover={{ y: -4 }}
+                className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all"
+              >
+                <h3 className="text-xl font-bold text-slate-900 mb-4">Awards</h3>
+                <ul className="space-y-3">
+                  {[
+                    "Mobile Application D-Industry – 2nd Runner Up",
+                    "Robot Contest KMITL 2017 – Top 10",
+                  ].map((award, i) => (
+                    <motion.li
+                      key={i}
+                      whileHover={{ x: 4 }}
+                      className="flex items-center gap-3 text-sm text-slate-600"
+                    >
+                      <motion.span
+                        animate={{ rotate: [0, 20, 0] }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          repeatDelay: 2 + i,
+                        }}
+                        className="text-amber-500 text-lg"
+                      >
+                        &#9733;
+                      </motion.span>
+                      {award}
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
+            </ScrollReveal>
 
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-              <h3 className="font-bold text-dark mb-3">Languages</h3>
-              <ul className="space-y-2">
-                <li className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Thai</span>
-                  <span className="text-primary font-medium">Native</span>
-                </li>
-                <li className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">English</span>
-                  <span className="text-primary font-medium">
-                    Conversational
-                  </span>
-                </li>
-              </ul>
-            </div>
+            <ScrollReveal direction="right" delay={0.1}>
+              <motion.div
+                whileHover={{ y: -4 }}
+                className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all"
+              >
+                <h3 className="text-xl font-bold text-slate-900 mb-4">Languages</h3>
+                <ul className="space-y-3">
+                  {[
+                    { lang: "Thai", level: "Native", width: "100%" },
+                    { lang: "English", level: "Conversational", width: "70%" },
+                  ].map((l) => (
+                    <li key={l.lang}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-slate-600 font-medium">
+                          {l.lang}
+                        </span>
+                        <span className="text-blue-600 font-semibold">
+                          {l.level}
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
+                          initial={{ width: 0 }}
+                          whileInView={{ width: l.width }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            </ScrollReveal>
           </div>
         </div>
       </div>
@@ -580,56 +1109,102 @@ function Education() {
   );
 }
 
+/* ───────────────────────── CONTACT ───────────────────────── */
+
 function Contact() {
   return (
-    <section id="contact" className="py-20 px-6 bg-dark text-white">
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold">Let&apos;s Work Together</h2>
-        <p className="mt-3 text-gray-400 max-w-lg mx-auto">
-          I&apos;m open to new opportunities and interesting projects. Feel free
-          to reach out!
-        </p>
+    <section
+      id="contact"
+      className="relative py-32 px-6 bg-gradient-to-b from-slate-900 to-black text-white overflow-hidden"
+    >
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.3, 1] }}
+          transition={{ duration: 6, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl"
+          animate={{ scale: [1.3, 1, 1.3] }}
+          transition={{ duration: 6, repeat: Infinity }}
+        />
+      </div>
 
-        <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <a
-            href="mailto:planpopx78@gmail.com"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary rounded-lg font-medium hover:bg-primary-dark transition-colors"
-          >
-            <MailIcon /> planpopx78@gmail.com
-          </a>
-          <a
-            href="tel:0830085804"
-            className="inline-flex items-center gap-2 px-6 py-3 border border-gray-600 rounded-lg font-medium hover:border-primary hover:text-primary transition-colors"
-          >
-            <PhoneIcon /> 083-008-5804
-          </a>
-        </div>
+      <div className="relative z-10 max-w-4xl mx-auto text-center">
+        <ScrollReveal>
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-4">
+            Get in Touch
+          </p>
+        </ScrollReveal>
+        <ScrollReveal delay={0.1}>
+          <h2 className="text-4xl sm:text-6xl font-bold mb-6">
+            Let&apos;s Build
+            <br />
+            <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-violet-400 bg-clip-text text-transparent">
+              Something Great
+            </span>
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal delay={0.2}>
+          <p className="text-slate-400 max-w-lg mx-auto mb-12 text-lg">
+            I&apos;m open to new opportunities and interesting projects. Feel
+            free to reach out!
+          </p>
+        </ScrollReveal>
 
-        <div className="mt-8 flex justify-center gap-6">
-          <a
-            href="https://github.com/Planos78"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-400 hover:text-white transition-colors"
-            aria-label="GitHub"
-          >
-            <GitHubIcon />
-          </a>
-          <a
-            href="https://linkedin.com/in/thikhamporn-o-siri-375b47198"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-400 hover:text-white transition-colors"
-            aria-label="LinkedIn"
-          >
-            <LinkedInIcon />
-          </a>
-        </div>
+        <ScrollReveal delay={0.3}>
+          <div className="flex flex-wrap justify-center gap-4">
+            <MagneticButton
+              href="mailto:planpopx78@gmail.com"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl font-semibold shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-shadow text-white"
+            >
+              <MailIcon /> planpopx78@gmail.com
+            </MagneticButton>
+            <MagneticButton
+              href="tel:0830085804"
+              className="inline-flex items-center gap-3 px-8 py-4 border-2 border-slate-700 rounded-2xl font-semibold hover:border-cyan-400 hover:text-cyan-400 transition-all text-white"
+            >
+              <PhoneIcon /> 083-008-5804
+            </MagneticButton>
+          </div>
+        </ScrollReveal>
 
-        <p className="mt-16 text-gray-500 text-sm">
+        <ScrollReveal delay={0.4}>
+          <div className="mt-10 flex justify-center gap-6">
+            {[
+              { icon: <GitHubIcon />, href: "https://github.com/Planos78", label: "GitHub" },
+              {
+                icon: <LinkedInIcon />,
+                href: "https://linkedin.com/in/thikhamporn-o-siri-375b47198",
+                label: "LinkedIn",
+              },
+            ].map((s) => (
+              <motion.a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.2, y: -4 }}
+                whileTap={{ scale: 0.9 }}
+                className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-blue-600 transition-colors"
+                aria-label={s.label}
+              >
+                {s.icon}
+              </motion.a>
+            ))}
+          </div>
+        </ScrollReveal>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="mt-20 text-slate-600 text-sm"
+        >
           &copy; {new Date().getFullYear()} Thikhamporn O-Siri. Built with
-          Next.js & TailwindCSS.
-        </p>
+          Next.js, TailwindCSS & Framer Motion.
+        </motion.p>
       </div>
     </section>
   );
@@ -643,36 +1218,8 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <section id="about" className="py-20 px-6">
-          <div className="max-w-4xl mx-auto">
-            <SectionTitle title="About Me" subtitle="A brief introduction" />
-            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
-              <p className="text-gray-600 leading-relaxed text-lg">
-                Frontend-focused Fullstack Developer with{" "}
-                <span className="text-dark font-semibold">
-                  4+ years of experience
-                </span>{" "}
-                building large-scale enterprise platforms in Fleet Management,
-                Logistics, Fintech, and E-Commerce domains. I specialize in the{" "}
-                <span className="text-dark font-semibold">
-                  React ecosystem
-                </span>
-                , real-time data systems (
-                <span className="text-dark font-semibold">
-                  MQTT/WebSocket
-                </span>
-                ), and map-based applications (
-                <span className="text-dark font-semibold">
-                  Google Maps, Longdo Map
-                </span>
-                ). Proven ability to handle complex production systems at scale
-                (50,000+ vehicles), debug critical issues, and deliver clean,
-                high-performance interfaces in fast-paced cross-functional
-                teams.
-              </p>
-            </div>
-          </div>
-        </section>
+        <StatsSection />
+        <About />
         <Skills />
         <Experience />
         <Projects />
