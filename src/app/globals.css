@@ -1,13 +1,10 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-jakarta);
   --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
-  --color-section-alt: #f8fafc;
   --color-dark: #0f172a;
-  --color-gray-text: #64748b;
-  --color-border: #e2e8f0;
 }
 
 * {
@@ -32,7 +29,6 @@ body {
   color: white;
 }
 
-/* Smooth scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
