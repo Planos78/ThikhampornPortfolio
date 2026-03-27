@@ -443,7 +443,7 @@ function Hero() {
           >
             {[
               { icon: <PhoneIcon />, text: "083-008-5804", href: "tel:0830085804" },
-              { icon: <MailIcon />, text: "planpopx78@gmail.com", href: "mailto:planpopx78@gmail.com" },
+              { icon: <MailIcon />, text: "thikhamporn.osi@gmail.com", href: "mailto:thikhamporn.osi@gmail.com" },
               { icon: <GitHubIcon />, text: "Planos78", href: "https://github.com/Planos78" },
               { icon: <LinkedInIcon />, text: "LinkedIn", href: "https://linkedin.com/in/thikhamporn-o-siri-375b47198" },
               { icon: <LocationIcon />, text: "Bangkok" },
@@ -912,10 +912,10 @@ function Contact() {
         <ScrollReveal delay={0.3}>
           <div className="flex flex-wrap justify-center gap-3">
             <MagneticButton
-              href="mailto:planpopx78@gmail.com"
+              href="mailto:thikhamporn.osi@gmail.com"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-semibold text-sm shadow-lg shadow-blue-500/20 text-white"
             >
-              <MailIcon /> planpopx78@gmail.com
+              <MailIcon /> thikhamporn.osi@gmail.com
             </MagneticButton>
             <MagneticButton
               href="tel:0830085804"
