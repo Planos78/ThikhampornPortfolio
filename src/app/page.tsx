@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   motion,
   useScroll,
@@ -10,6 +11,8 @@ import {
   useMotionValue,
   AnimatePresence,
 } from "framer-motion";
+
+const Robot3D = dynamic(() => import("@/components/Robot3D"), { ssr: false });
 
 /* ───────────────────────── DATA ───────────────────────── */
 
@@ -289,13 +292,13 @@ function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
           ? "bg-white/80 backdrop-blur-xl shadow-lg shadow-black/[0.03] border-b border-slate-200/50"
-          : "bg-transparent"
+          : "bg-white/[0.03] backdrop-blur-sm"
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <motion.a href="#" className="text-lg font-extrabold" whileHover={{ scale: 1.05 }}>
-          <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Thikhamporn</span>
-          <span className="text-slate-800">.Dev</span>
+          <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Thikhamporn</span>
+          <span className={scrolled ? "text-slate-800" : "text-white"}>.Dev</span>
         </motion.a>
 
         <div className="hidden md:flex items-center gap-1">
@@ -306,15 +309,15 @@ function Navbar() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * i + 0.3 }}
-              className="relative px-4 py-2 text-[13px] text-slate-500 hover:text-blue-600 transition-colors font-semibold group"
+              className={`relative px-4 py-2 text-[13px] hover:text-cyan-400 transition-colors font-semibold group ${scrolled ? "text-slate-500" : "text-slate-300"}`}
             >
               {l.label}
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 group-hover:w-3/4 transition-all duration-300 rounded-full" />
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 group-hover:w-3/4 transition-all duration-300 rounded-full" />
             </motion.a>
           ))}
         </div>
 
-        <button className="md:hidden text-slate-800" onClick={() => setOpen(!open)} aria-label="Toggle menu">
+        <button className={`md:hidden ${scrolled ? "text-slate-800" : "text-white"}`} onClick={() => setOpen(!open)} aria-label="Toggle menu">
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
@@ -347,164 +350,175 @@ function Navbar() {
   );
 }
 
-/* ───────────────────────── HERO (COMPACT) ───────────────────────── */
+/* ───────────────────────── HERO WITH 3D ROBOT ───────────────────────── */
 
 function Hero() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.6], [1, 0.95]);
 
   return (
-    <section ref={ref} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-white" />
+    <section ref={ref} className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#020210] via-[#050520] to-[#0a0a2e]">
+      {/* Subtle grid pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      {/* Glow effects */}
       <motion.div
-        className="absolute top-10 left-1/3 w-[500px] h-[500px] bg-blue-400/[0.07] rounded-full blur-3xl"
-        animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/[0.08] rounded-full blur-[120px]"
+        animate={{ scale: [1, 1.1, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-10 right-1/3 w-[400px] h-[400px] bg-cyan-400/[0.07] rounded-full blur-3xl"
-        animate={{ scale: [1.15, 1, 1.15] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-cyan-500/[0.05] rounded-full blur-[100px]"
+        animate={{ scale: [1.1, 1, 1.1] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <motion.div style={{ y, opacity, scale }} className="relative z-10 max-w-3xl text-center px-6 pt-16">
-        {/* Avatar */}
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 120 }}
-          className="relative w-24 h-24 mx-auto mb-8"
-        >
+      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-10 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8">
+        {/* Left: Text content */}
+        <motion.div style={{ y, opacity }} className="flex-1 text-center lg:text-left max-w-xl">
           <motion.div
-            className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 via-cyan-400 to-violet-500 p-[2px]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="inline-flex items-center gap-2 px-3 py-1 bg-white/[0.05] backdrop-blur-sm rounded-full border border-white/10 mb-6"
           >
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-              <span className="text-3xl font-extrabold bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent">T</span>
-            </div>
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+            <span className="text-xs text-slate-400 font-medium">Available for work</span>
+          </motion.div>
+
+          <div className="overflow-hidden">
+            <motion.h1
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] tracking-tight"
+            >
+              Thikhamporn
+            </motion.h1>
+          </div>
+          <div className="overflow-hidden">
+            <motion.h1
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight bg-gradient-to-r from-blue-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent"
+            >
+              O-Siri
+            </motion.h1>
+          </div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75 }}
+            className="mt-4 text-base text-slate-400 font-semibold"
+          >
+            Frontend / Fullstack Developer &middot; 4+ Years
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="mt-3 text-slate-500 leading-relaxed text-sm max-w-md mx-auto lg:mx-0"
+          >
+            Building large-scale enterprise platforms in Fleet Management,
+            Logistics, Fintech, and E-Commerce with cutting-edge technologies.
+          </motion.p>
+
+          {/* Contact pills */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.05 }}
+            className="mt-6 flex flex-wrap justify-center lg:justify-start gap-2"
+          >
+            {[
+              { icon: <PhoneIcon />, text: "083-008-5804", href: "tel:0830085804" },
+              { icon: <MailIcon />, text: "planpopx78@gmail.com", href: "mailto:planpopx78@gmail.com" },
+              { icon: <GitHubIcon />, text: "Planos78", href: "https://github.com/Planos78" },
+              { icon: <LinkedInIcon />, text: "LinkedIn", href: "https://linkedin.com/in/thikhamporn-o-siri-375b47198" },
+              { icon: <LocationIcon />, text: "Bangkok" },
+            ].map((item, i) => (
+              <motion.span key={i} whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    target={item.href.startsWith("http") ? "_blank" : undefined}
+                    rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.05] backdrop-blur-sm rounded-full text-xs text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all border border-white/10"
+                  >
+                    {item.icon} {item.text}
+                  </a>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.05] backdrop-blur-sm rounded-full text-xs text-slate-400 border border-white/10">
+                    {item.icon} {item.text}
+                  </span>
+                )}
+              </motion.span>
+            ))}
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+            className="mt-8 flex justify-center lg:justify-start gap-3"
+          >
+            <MagneticButton
+              href="#projects"
+              className="group relative px-7 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold text-sm overflow-hidden shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-shadow"
+            >
+              <span className="relative z-10">View Projects</span>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600"
+                initial={{ x: "100%" }}
+                whileHover={{ x: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+            </MagneticButton>
+            <MagneticButton
+              href="#contact"
+              className="px-7 py-3 border border-white/20 rounded-xl font-semibold text-sm text-slate-300 hover:border-cyan-400 hover:text-cyan-400 transition-all"
+            >
+              Contact Me
+            </MagneticButton>
           </motion.div>
         </motion.div>
 
-        {/* Name */}
-        <div className="overflow-hidden">
-          <motion.h1
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight"
-          >
-            Thikhamporn
-          </motion.h1>
-        </div>
-        <div className="overflow-hidden">
-          <motion.h1
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight bg-gradient-to-r from-blue-600 via-cyan-500 to-violet-500 bg-clip-text text-transparent"
-          >
-            O-Siri
-          </motion.h1>
-        </div>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.75 }}
-          className="mt-5 text-base sm:text-lg text-slate-400 font-semibold tracking-wide"
-        >
-          Frontend / Fullstack Developer &middot; 4+ Years Experience
-        </motion.p>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-          className="mt-3 text-slate-400 leading-relaxed max-w-xl mx-auto text-sm"
-        >
-          Building large-scale enterprise platforms in Fleet Management,
-          Logistics, Fintech, and E-Commerce with cutting-edge technologies.
-        </motion.p>
-
-        {/* Contact pills */}
+        {/* Right: 3D Robot */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05 }}
-          className="mt-6 flex flex-wrap justify-center gap-2"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+          className="flex-1 w-full max-w-lg h-[400px] sm:h-[500px] lg:h-[550px]"
         >
-          {[
-            { icon: <PhoneIcon />, text: "083-008-5804", href: "tel:0830085804" },
-            { icon: <MailIcon />, text: "planpopx78@gmail.com", href: "mailto:planpopx78@gmail.com" },
-            { icon: <GitHubIcon />, text: "Planos78", href: "https://github.com/Planos78" },
-            { icon: <LinkedInIcon />, text: "LinkedIn", href: "https://linkedin.com/in/thikhamporn-o-siri-375b47198" },
-            { icon: <LocationIcon />, text: "Bangkok" },
-          ].map((item, i) => (
-            <motion.span key={i} whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
-              {item.href ? (
-                <a
-                  href={item.href}
-                  target={item.href.startsWith("http") ? "_blank" : undefined}
-                  rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full text-xs text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-100 shadow-sm"
-                >
-                  {item.icon} {item.text}
-                </a>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full text-xs text-slate-500 border border-slate-100 shadow-sm">
-                  {item.icon} {item.text}
-                </span>
-              )}
-            </motion.span>
-          ))}
+          <Robot3D />
         </motion.div>
+      </div>
 
-        {/* CTA */}
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+      >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
-          className="mt-8 flex justify-center gap-3"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="w-5 h-8 border-2 border-white/20 rounded-full flex justify-center pt-1.5"
         >
-          <MagneticButton
-            href="#projects"
-            className="group relative px-7 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold text-sm overflow-hidden shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-shadow"
-          >
-            <span className="relative z-10">View Projects</span>
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600"
-              initial={{ x: "100%" }}
-              whileHover={{ x: 0 }}
-              transition={{ duration: 0.3 }}
-            />
-          </MagneticButton>
-          <MagneticButton
-            href="#contact"
-            className="px-7 py-3 border-2 border-slate-200 rounded-xl font-semibold text-sm text-slate-600 hover:border-blue-400 hover:text-blue-600 transition-all"
-          >
-            Contact Me
-          </MagneticButton>
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.8 }}
-          className="mt-12"
-        >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-5 h-8 mx-auto border-2 border-slate-300 rounded-full flex justify-center pt-1.5"
-          >
-            <motion.div className="w-1 h-1 bg-slate-400 rounded-full" />
-          </motion.div>
+          <motion.div className="w-1 h-1 bg-white/40 rounded-full" />
         </motion.div>
       </motion.div>
     </section>
