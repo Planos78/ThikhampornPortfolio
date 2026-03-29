@@ -94,18 +94,6 @@ const PROJECTS: {
     desc: "Mobile web app on LINE for ordering concrete — map pinning, product selection, payment, and delivery tracking.",
     gradient: "from-emerald-600 via-green-500 to-teal-400",
   },
-  {
-    title: "SCB LCMS – Banking",
-    tech: "React · MUI · REST API",
-    desc: "Internal banking management system for SCB with dashboard and management UI, focused on performance.",
-    gradient: "from-amber-500 via-orange-500 to-red-400",
-  },
-  {
-    title: "ANP Merchant Platform",
-    tech: "React · TailwindCSS",
-    desc: "Ticket management platform for merchants with improved UX and reusable component architecture.",
-    gradient: "from-rose-600 via-pink-500 to-fuchsia-400",
-  },
 ];
 
 /* ───────────────────────── HOOKS ───────────────────────── */
